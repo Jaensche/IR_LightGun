@@ -5,12 +5,12 @@
 #include <Keyboard.h>
 #include "Wire.h"
 
-#define triggerA 2
-#define triggerB 3
-#define mag 9
+#define triggerA 10
+#define triggerB 11
+#define mag 14
 #define lid 8
-#define fireLED 4
-#define warningLED 15
+#define fireLED 9
+#define warningLED 13
 
 
 DFRobotIRPosition camera;
@@ -20,24 +20,20 @@ int positionY[] = {1023, 1023, 1023, 1023};
 int cornersX[] = {1023, 1023, 1023, 1023};
 int cornersY[] = {1023, 1023, 1023, 1023};
 
-boolean dataComplete = false;
-
 int button_triggerA = 0;
 int button_triggerB = 0;
 int button_mag = 0;
 int button_lid = 0;
-
-
 
 int warningLEDState = 0;
 
 int screenW = 1920;
 int screenH = 1080;
 
-//int gunCenterX = 530;
-//int gunCenterY = 312;
-int gunCenterX = 595;
-int gunCenterY = 325;
+int gunCenterX = 350;
+int gunCenterY = 450;
+//int gunCenterX = 595;
+//int gunCenterY = 325;
 
 void setup() {
 
@@ -59,9 +55,10 @@ void setup() {
 
 void loop() {
   handleButtons();
-  getCameraData();
-  sortPoints();
-  moveCursor();
+  if(getCameraData()){
+    sortPoints();
+    moveCursor();
+    }
 }
 
 void handleButtons() {
@@ -73,10 +70,10 @@ void handleButtons() {
   if (triggerA_now != button_triggerA) {
     button_triggerA = triggerA_now;
     if (button_triggerA == 0) {
-      AbsMouse.press(MOUSE_LEFT);
+      Keyboard.press(KEY_KP_1);
       digitalWrite(fireLED, HIGH);
     } else {
-      AbsMouse.release(MOUSE_LEFT);
+      Keyboard.release(KEY_KP_1);
       digitalWrite(fireLED, LOW);
     }
   }
@@ -84,53 +81,59 @@ void handleButtons() {
   if (triggerB_now != button_triggerB) {
     button_triggerB = triggerB_now;
     if (button_triggerB == 0) {
-      AbsMouse.press(MOUSE_RIGHT);
+      Keyboard.press(KEY_KP_2);
     } else {
-      AbsMouse.release(MOUSE_RIGHT);
+      Keyboard.release(KEY_KP_2);
     }
   }
 
   if (lid_now != button_lid) {
     button_lid = lid_now;
     if (button_lid == 0) {
-      AbsMouse.press(MOUSE_MIDDLE);
+      Keyboard.press(KEY_KP_3);
     } else {
-      AbsMouse.release(MOUSE_MIDDLE);
+      Keyboard.release(KEY_KP_3);
     }
   }
 
   if (mag_now != button_mag) {
     button_mag = mag_now;
     if (button_mag == 0) {
-      Keyboard.press(KEY_RETURN);
+      Keyboard.press(KEY_KP_4);
     }
   } else {
-    Keyboard.release(KEY_RETURN);
+    Keyboard.release(KEY_KP_4);
   }
 }
 
-void getCameraData() {
+bool getCameraData() {
   camera.requestPosition();
   if (camera.available()) {
     for (int i = 0; i < 4; i++) {
       positionX[i] = camera.readX(i);
       positionY[i] = camera.readY(i);
+
+      // if(positionX[i] != 1023)
+      // {
+      //   Serial.print(i);
+      //   Serial.print(": ");
+      //   Serial.print(positionX[i]);
+      //   Serial.print(", ");
+      //   Serial.println(positionY[i]);
+      // }
     }
   }
   
-  if (positionX[3] == 1023 && positionY[3] == 1023) {
-    dataComplete = false;
+  if (positionX[3] == 1023 && positionY[3] == 1023) {       
     setWarningLED(1);
+    return false;
   } else {
-    dataComplete = true;
     setWarningLED(0);
+    return true;    
   }
 }
 
 void sortPoints() {
-  if (!dataComplete)
-    return;
-
   int orderedX[] = {0, 1, 2, 3};
 
   for (int i = 0; i < 3 ; i++) {
@@ -149,7 +152,6 @@ void sortPoints() {
     cornersX[2] = positionX[orderedX[1]];
     cornersY[2] = positionY[orderedX[1]];
   } else {
-
     cornersX[0] = positionX[orderedX[1]];
     cornersY[0] = positionY[orderedX[1]];
     cornersX[2] = positionX[orderedX[0]];
@@ -161,18 +163,15 @@ void sortPoints() {
     cornersY[1] = positionY[orderedX[2]];
     cornersX[3] = positionX[orderedX[3]];
     cornersY[3] = positionY[orderedX[3]];
-  } else {
-
+  } else {     
     cornersX[1] = positionX[orderedX[3]];
     cornersY[1] = positionY[orderedX[3]];
     cornersX[3] = positionX[orderedX[2]];
     cornersY[3] = positionY[orderedX[2]];
   }
 }
-void moveCursor() {
-  if (!dataComplete)
-    return;
 
+void moveCursor() {
   Transformation trans(cornersX, cornersY, screenW, screenH, gunCenterX, gunCenterY);
   AbsMouse.move(trans.u(),trans.v());
 }
