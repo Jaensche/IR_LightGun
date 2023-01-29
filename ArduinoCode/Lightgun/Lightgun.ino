@@ -14,11 +14,11 @@
 
 
 DFRobotIRPosition camera;
-int positionX[] = {1023, 1023, 1023, 1023};
-int positionY[] = {1023, 1023, 1023, 1023};
+int positionX[] = { 1023, 1023, 1023, 1023 };
+int positionY[] = { 1023, 1023, 1023, 1023 };
 
-int cornersX[] = {1023, 1023, 1023, 1023};
-int cornersY[] = {1023, 1023, 1023, 1023};
+int cornersX[] = { 1023, 1023, 1023, 1023 };
+int cornersY[] = { 1023, 1023, 1023, 1023 };
 
 int button_triggerA = 0;
 int button_triggerB = 0;
@@ -32,8 +32,6 @@ int screenH = 1080;
 
 int gunCenterX = 350;
 int gunCenterY = 450;
-//int gunCenterX = 595;
-//int gunCenterY = 325;
 
 void setup() {
 
@@ -55,10 +53,10 @@ void setup() {
 
 void loop() {
   handleButtons();
-  if(getCameraData()){
+  if (getCameraData()) {
     sortPoints();
     moveCursor();
-    }
+  }
 }
 
 void handleButtons() {
@@ -70,10 +68,10 @@ void handleButtons() {
   if (triggerA_now != button_triggerA) {
     button_triggerA = triggerA_now;
     if (button_triggerA == 0) {
-      Keyboard.press(KEY_KP_1);
+      Keyboard.press("1");
       digitalWrite(fireLED, HIGH);
     } else {
-      Keyboard.release(KEY_KP_1);
+      Keyboard.release("1");
       digitalWrite(fireLED, LOW);
     }
   }
@@ -81,28 +79,28 @@ void handleButtons() {
   if (triggerB_now != button_triggerB) {
     button_triggerB = triggerB_now;
     if (button_triggerB == 0) {
-      Keyboard.press(KEY_KP_2);
+      Keyboard.press("2");
     } else {
-      Keyboard.release(KEY_KP_2);
+      Keyboard.release("2");
     }
   }
 
   if (lid_now != button_lid) {
     button_lid = lid_now;
     if (button_lid == 0) {
-      Keyboard.press(KEY_KP_3);
+      Keyboard.press("3");
     } else {
-      Keyboard.release(KEY_KP_3);
+      Keyboard.release("3");
     }
   }
 
   if (mag_now != button_mag) {
     button_mag = mag_now;
     if (button_mag == 0) {
-      Keyboard.press(KEY_KP_4);
+      Keyboard.press("4");
     }
   } else {
-    Keyboard.release(KEY_KP_4);
+    Keyboard.release("4");
   }
 }
 
@@ -113,30 +111,33 @@ bool getCameraData() {
       positionX[i] = camera.readX(i);
       positionY[i] = camera.readY(i);
 
-      // if(positionX[i] != 1023)
-      // {
-      //   Serial.print(i);
-      //   Serial.print(": ");
-      //   Serial.print(positionX[i]);
-      //   Serial.print(", ");
-      //   Serial.println(positionY[i]);
-      // }
+      if (Serial.available()) {
+        Serial.read();
+        for (i = 0; i < 4; i++) {
+          Serial.print(int(positionX[i]));
+          Serial.print(",");
+          Serial.print(int(positionY[i]));
+          if (i < 3)
+            Serial.print(",");
+        }
+        Serial.println("");
+      }
     }
   }
-  
-  if (positionX[3] == 1023 && positionY[3] == 1023) {       
+
+  if (positionX[3] == 1023 && positionY[3] == 1023) {
     setWarningLED(1);
     return false;
   } else {
     setWarningLED(0);
-    return true;    
+    return true;
   }
 }
 
 void sortPoints() {
-  int orderedX[] = {0, 1, 2, 3};
+  int orderedX[] = { 0, 1, 2, 3 };
 
-  for (int i = 0; i < 3 ; i++) {
+  for (int i = 0; i < 3; i++) {
     for (int j = i + 1; j < 4; j++) {
       if (positionX[orderedX[i]] < positionX[orderedX[j]]) {
         int temp = orderedX[i];
@@ -163,7 +164,7 @@ void sortPoints() {
     cornersY[1] = positionY[orderedX[2]];
     cornersX[3] = positionX[orderedX[3]];
     cornersY[3] = positionY[orderedX[3]];
-  } else {     
+  } else {
     cornersX[1] = positionX[orderedX[3]];
     cornersY[1] = positionY[orderedX[3]];
     cornersX[3] = positionX[orderedX[2]];
@@ -173,7 +174,7 @@ void sortPoints() {
 
 void moveCursor() {
   Transformation trans(cornersX, cornersY, screenW, screenH, gunCenterX, gunCenterY);
-  AbsMouse.move(trans.u(),trans.v());
+  AbsMouse.move(trans.u(), trans.v());
 }
 
 void setWarningLED(int x) {
