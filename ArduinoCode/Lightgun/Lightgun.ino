@@ -12,7 +12,6 @@
 #define fireLED 9
 #define warningLED 13
 
-
 DFRobotIRPosition camera;
 int positionX[] = { 1023, 1023, 1023, 1023 };
 int positionY[] = { 1023, 1023, 1023, 1023 };
@@ -30,8 +29,8 @@ int warningLEDState = 0;
 int screenW = 1920;
 int screenH = 1080;
 
-int gunCenterX = 350;
-int gunCenterY = 450;
+int gunCenterX = 1024 / 2 - 128;
+int gunCenterY = 1024 / 2 - 128;
 
 void setup() {
 
@@ -110,18 +109,18 @@ bool getCameraData() {
     for (int i = 0; i < 4; i++) {
       positionX[i] = camera.readX(i);
       positionY[i] = camera.readY(i);
+    }
 
-      if (Serial.available()) {
-        Serial.read();
-        for (i = 0; i < 4; i++) {
-          Serial.print(int(positionX[i]));
+    if (Serial.available()) {
+      Serial.read();
+      for (int i = 0; i < 4; i++) {
+        Serial.print(positionX[i]);
+        Serial.print(",");
+        Serial.print(positionY[i]);
+        if (i < 3)
           Serial.print(",");
-          Serial.print(int(positionY[i]));
-          if (i < 3)
-            Serial.print(",");
-        }
-        Serial.println("");
       }
+      Serial.println("");
     }
   }
 
